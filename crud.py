@@ -3,6 +3,8 @@ from models import Task
 from schemas import TaskCreate
 from schemas import TaskCreate
 from schemas import TaskCreate, TaskUpdate
+from models import User
+from auth import hash_password, verify_password, create_access_token
 
 def create_task(db: Session, task: TaskCreate):
     new_task = Task(
@@ -53,3 +55,44 @@ def delete_task(db: Session, task_id: int):
     db.commit()
 
     return {"message": "Task deleted successfully"}
+
+def create_user(db: Session, user):
+    hashed_pwd = hash_password(user.password)
+
+    new_user = User(
+        username=user.username,
+        password=hashed_pwd
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User created successfully"
+    }
+
+
+def login_user(db: Session, user):
+    existing_user = db.query(User).filter(
+        User.username == user.username
+    ).first()
+
+    if not existing_user:
+        return {"error": "Invalid username"}
+
+    if not verify_password(
+        user.password,
+        existing_user.password
+    ):
+        return {"error": "Invalid password"}
+
+    access_token = create_access_token(
+        data={"sub": existing_user.username}
+    )
+
+    return {
+        "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
