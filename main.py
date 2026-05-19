@@ -42,7 +42,7 @@ def create_task(
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
-    return crud.create_task(db, task)
+    return crud.create_task(db, task, user)
 
 
 # Get All Tasks API
@@ -51,29 +51,22 @@ def get_tasks(
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
-    return crud.get_tasks(db)
+    return crud.get_tasks(db,user)
 
-# Update Task API
-@app.put("/tasks/{task_id}")
-def update_task(
-    task_id: int,
-    task: schemas.TaskCreate,
-    db: Session = Depends(get_db),
-    user: str = Depends(get_current_user)
-):
-    return crud.update_task(db, task_id, task)
 
 
 # Delete Task API
 @app.delete("/tasks/{task_id}")
 def delete_task(
-
-    
     task_id: int,
     db: Session = Depends(get_db),
-    user: str = Depends(get_current_user)
+    current_user: str = Depends(get_current_user)
 ):
-    return crud.delete_task(db, task_id)
+    return crud.delete_task(
+        db,
+        task_id,
+        current_user
+    )
 
 @app.post("/signup")
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -83,3 +76,30 @@ def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     return crud.login_user(db, user)
+
+@app.put("/tasks/{task_id}/complete")
+def complete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_current_user)
+):
+
+    return crud.update_task_status(
+        db,
+        task_id,
+        user
+    )
+
+@app.put("/tasks/{task_id}")
+def update_task(
+    task_id: int,
+    task: schemas.TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    return crud.update_task(
+        db,
+        task_id,
+        task,
+        current_user
+    )

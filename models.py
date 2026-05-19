@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String , ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -7,7 +9,10 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String)
-    status = Column(String, default="Pending")
+    status = Column(String, default="pending")
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="tasks")
+    
 
 class User(Base):
     __tablename__ = "users"
@@ -15,4 +20,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
-    
+    tasks = relationship("Task", back_populates="owner")

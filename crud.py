@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+import models
 from models import Task
 from schemas import TaskCreate
 from schemas import TaskCreate
@@ -6,47 +7,47 @@ from schemas import TaskCreate, TaskUpdate
 from models import User
 from auth import hash_password, verify_password, create_access_token
 
-def create_task(db: Session, task: TaskCreate):
-    new_task = Task(
+def create_task(db: Session, task, username):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    new_task = models.Task(
         title=task.title,
-        description=task.description
+        description=task.description,
+        owner_id=user.id
     )
 
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
 
-    return {
-        "message": "Task created successfully",
-        "task": new_task
-    }
+    return new_task
 
+def get_tasks(db: Session, username):
 
-def get_tasks(db: Session):
-    return db.query(Task).all()
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
 
-def update_task(db: Session, task_id: int, updated_task: TaskUpdate):
-    task = db.query(Task).filter(Task.id == task_id).first()
-
-    if not task:
-        return {"error": "Task not found"}
-
-    task.title = updated_task.title
-    task.description = updated_task.description
-    task.status = updated_task.status
-
-    db.commit()
-    db.refresh(task)
-
-    return {
-        "message": "Task updated successfully",
-        "task": task
-    }
+    return db.query(Task).filter(
+        Task.owner_id == user.id
+    ).all()
 
 
 
-def delete_task(db: Session, task_id: int):
-    task = db.query(Task).filter(Task.id == task_id).first()
+
+def delete_task(db: Session, task_id: int, username: str):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    task = db.query(models.Task).filter(
+        models.Task.id == task_id,
+        models.Task.owner_id == user.id
+    ).first()
 
     if not task:
         return {"error": "Task not found"}
@@ -96,3 +97,51 @@ def login_user(db: Session, user):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+def update_task_status(db: Session, task_id: int, username: str):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    task = db.query(Task).filter(
+        Task.id == task_id,
+        Task.owner_id == user.id
+    ).first()
+
+    if not task:
+        return {"error": "Task not found"}
+
+    task.status = "completed"
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+def update_task(
+    db: Session,
+    task_id: int,
+    updated_task,
+    username: str
+):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    task = db.query(Task).filter(
+        Task.id == task_id,
+        Task.owner_id == user.id
+    ).first()
+
+    if not task:
+        return {"error": "Task not found"}
+
+    task.title = updated_task.title
+    task.description = updated_task.description
+
+    db.commit()
+    db.refresh(task)
+
+    return task
