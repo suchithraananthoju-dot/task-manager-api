@@ -6,6 +6,7 @@ from schemas import TaskCreate
 from schemas import TaskCreate, TaskUpdate
 from models import User
 from auth import hash_password, verify_password, create_access_token
+from datetime import datetime, UTC
 
 def create_task(db: Session, task, username):
 
@@ -25,7 +26,22 @@ def create_task(db: Session, task, username):
 
     return new_task
 
-def get_tasks(db: Session, username):
+# def get_tasks(db: Session, username):
+
+#     user = db.query(User).filter(
+#         User.username == username
+#     ).first()
+
+#     return db.query(Task).filter(
+#         Task.owner_id == user.id
+#     ).all()
+
+def get_tasks(
+    db: Session,
+    username: str,
+    skip: int,
+    limit: int
+):
 
     user = db.query(User).filter(
         User.username == username
@@ -33,9 +49,7 @@ def get_tasks(db: Session, username):
 
     return db.query(Task).filter(
         Task.owner_id == user.id
-    ).all()
-
-
+    ).offset(skip).limit(limit).all()
 
 
 def delete_task(db: Session, task_id: int, username: str):
@@ -140,8 +154,34 @@ def update_task(
 
     task.title = updated_task.title
     task.description = updated_task.description
+    task.status = updated_task.status
+
+    task.updated_at = datetime.now(UTC)
 
     db.commit()
     db.refresh(task)
 
     return task
+
+def search_tasks(db: Session, keyword: str, username: str):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    return db.query(Task).filter(
+        Task.owner_id == user.id,
+        Task.title.contains(keyword)
+    ).all()
+
+
+def filter_tasks(db: Session, status: str, username: str):
+
+    user = db.query(User).filter(
+        User.username == username
+    ).first()
+
+    return db.query(Task).filter(
+        Task.owner_id == user.id,
+        Task.status == status
+    ).all()

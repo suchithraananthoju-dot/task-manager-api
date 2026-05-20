@@ -45,13 +45,30 @@ def create_task(
     return crud.create_task(db, task, user)
 
 
-# Get All Tasks API
+
+
 @app.get("/tasks")
 def get_tasks(
+    skip: int = 0,
+    limit: int = 5,
     db: Session = Depends(get_db),
     user: str = Depends(get_current_user)
 ):
-    return crud.get_tasks(db,user)
+    return crud.get_tasks(
+        db,
+        user,
+        skip,
+        limit
+    )
+
+# # Get All Tasks API
+# @app.get("/tasks", response_model=list[schemas.TaskResponse])
+# def get_tasks(
+#     db: Session = Depends(get_db),
+#     user: str = Depends(get_current_user)
+# ):
+#     return crud.get_tasks(db,user)
+
 
 
 
@@ -102,4 +119,31 @@ def update_task(
         task_id,
         task,
         current_user
+    )
+
+@app.get("/tasks/search")
+def search_tasks(
+    keyword: str,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_current_user)
+):
+
+    return crud.search_tasks(
+        db,
+        keyword,
+        user
+    )
+
+
+@app.get("/tasks/filter")
+def filter_tasks(
+    status: str,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_current_user)
+):
+
+    return crud.filter_tasks(
+        db,
+        status,
+        user
     )

@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String , ForeignKey
+from sqlalchemy import Column, Integer, String , ForeignKey , DateTime
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime, UTC
 
 
 class Task(Base):
@@ -12,7 +13,15 @@ class Task(Base):
     status = Column(String, default="pending")
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
-    
+ 
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    updated_at = Column(
+    DateTime,
+    default=lambda: datetime.now(UTC),
+    onupdate=lambda: datetime.now(UTC)
+    )
+    owner = relationship("User", back_populates="tasks")
 
 class User(Base):
     __tablename__ = "users"
