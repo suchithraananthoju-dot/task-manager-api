@@ -9,6 +9,7 @@ class TaskUpdate(BaseModel):
     title: str
     description: str
     status: str
+    
 
 
 class UserCreate(BaseModel):

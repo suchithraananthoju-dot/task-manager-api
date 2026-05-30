@@ -7,6 +7,7 @@ from schemas import TaskCreate, TaskUpdate
 from models import User
 from auth import hash_password, verify_password, create_access_token
 from datetime import datetime, UTC
+from fastapi import HTTPException
 
 def create_task(db: Session, task, username):
 
@@ -62,9 +63,11 @@ def delete_task(db: Session, task_id: int, username: str):
         models.Task.id == task_id,
         models.Task.owner_id == user.id
     ).first()
-
     if not task:
-        return {"error": "Task not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
 
     db.delete(task)
     db.commit()
@@ -94,13 +97,19 @@ def login_user(db: Session, user):
     ).first()
 
     if not existing_user:
-        return {"error": "Invalid username"}
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username"
+        )
 
     if not verify_password(
         user.password,
         existing_user.password
     ):
-        return {"error": "Invalid password"}
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid password"
+    )
 
     access_token = create_access_token(
         data={"sub": existing_user.username}
@@ -150,7 +159,10 @@ def update_task(
     ).first()
 
     if not task:
-        return {"error": "Task not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
 
     task.title = updated_task.title
     task.description = updated_task.description

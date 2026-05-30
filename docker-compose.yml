@@ -1,0 +1,44 @@
+services:
+
+  api:
+    build: .
+    container_name: task-manager-api-container
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - .:/app
+
+    environment:
+      PYTHONPATH: /app
+
+    depends_on:
+      - postgres
+
+    env_file:
+      - .env
+
+    restart: always
+
+
+  postgres:
+    image: postgres:17
+    container_name: postgres-container
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskdb
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: always
+
+
+volumes:
+  postgres_data:
